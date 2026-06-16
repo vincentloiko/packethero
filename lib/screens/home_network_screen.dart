@@ -11,6 +11,24 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
   bool cableConnectedToPc = false;
   bool cableConnectedToRouter = false;
 
+  bool inspectedPc = false;
+  bool inspectedRouter = false;
+  bool inspectedCable = false;
+
+  bool missionCompleted = false;
+  bool internetVerified = false;
+
+  void _checkMissionCompletion() {
+    if (inspectedPc &&
+        inspectedRouter &&
+        inspectedCable &&
+        cableConnectedToPc &&
+        cableConnectedToRouter &&
+        internetVerified) {
+      missionCompleted = true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,8 +38,37 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
       body: Stack(
         children: [
           Positioned(
-            left: 100,
-            top: 150,
+            left: 20,
+            top: 20,
+            child: Card(
+              color: missionCompleted
+                  ? Colors.green.shade100
+                  : Colors.yellow.shade100,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      missionCompleted
+                          ? 'MISSION COMPLETE'
+                          : 'Current Mission',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Restore Internet access'),
+                    if (missionCompleted) ...[
+                      const SizedBox(height: 8),
+                      const Text('✓ Completed'),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 120,
+            top: 260,
             child: _deviceCard(context, '💻', 'PC'),
           ),
           Positioned(
@@ -47,6 +94,26 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
   Widget _deviceCard(BuildContext context, String icon, String title) {
     return InkWell(
       onTap: () {
+        setState(() {
+          if (title == 'PC') {
+            inspectedPc = true;
+
+            if (cableConnectedToPc && cableConnectedToRouter) {
+              internetVerified = true;
+            }
+          }
+
+          if (title == 'Router') {
+            inspectedRouter = true;
+          }
+
+          if (title == 'Cable') {
+            inspectedCable = true;
+          }
+
+          _checkMissionCompletion();
+        });
+
         showDialog(
           context: context,
           builder: (dialogContext) {
@@ -61,6 +128,7 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
                         onPressed: () {
                           setState(() {
                             cableConnectedToPc = !cableConnectedToPc;
+                            _checkMissionCompletion();
                           });
                           setDialogState(() {});
                         },
@@ -76,6 +144,7 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
                           setState(() {
                             cableConnectedToRouter =
                                 !cableConnectedToRouter;
+                            _checkMissionCompletion();
                           });
                           setDialogState(() {});
                         },
@@ -104,10 +173,7 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                icon,
-                style: const TextStyle(fontSize: 40),
-              ),
+              Text(icon, style: const TextStyle(fontSize: 40)),
               const SizedBox(height: 8),
               Text(title),
             ],
@@ -121,13 +187,10 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
     switch (device) {
       case 'PC':
         return 'Mom\'s PC';
-
       case 'Router':
         return 'Home Router';
-
       case 'Cable':
         return 'Ethernet Cable';
-
       default:
         return device;
     }
@@ -142,14 +205,12 @@ Family desktop computer.
 Status: Powered On
 Internet: ${cableConnectedToPc && cableConnectedToRouter ? 'Connected' : 'No'}
 ''';
-
       case 'Router':
         return '''
 Wireless router used by the family.
 
 Status: Powered On
 ''';
-
       case 'Cable':
         return '''
 Network cable connecting the PC to the router.
@@ -157,7 +218,6 @@ Network cable connecting the PC to the router.
 PC side: ${cableConnectedToPc ? 'Connected' : 'Disconnected'}
 Router side: ${cableConnectedToRouter ? 'Connected' : 'Disconnected'}
 ''';
-
       default:
         return 'Unknown device';
     }
@@ -171,10 +231,7 @@ Router side: ${cableConnectedToRouter ? 'Connected' : 'Disconnected'}
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '👦',
-              style: TextStyle(fontSize: 44),
-            ),
+            Text('👦', style: TextStyle(fontSize: 44)),
             SizedBox(height: 8),
             Text('Hero'),
           ],
