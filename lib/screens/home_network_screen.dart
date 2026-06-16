@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HomeNetworkScreen extends StatefulWidget {
   const HomeNetworkScreen({super.key});
@@ -19,6 +20,33 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
 
   bool internetVerified = false;
   bool missionCompleted = false;
+
+  final FocusNode _focusNode = FocusNode();
+
+double heroLeft = 520;
+double heroTop = 500;
+
+void _moveHero(LogicalKeyboardKey key) {
+  const double step = 20;
+
+  setState(() {
+    if (key == LogicalKeyboardKey.arrowUp || key == LogicalKeyboardKey.keyW) {
+      heroTop -= step;
+    }
+
+    if (key == LogicalKeyboardKey.arrowDown || key == LogicalKeyboardKey.keyS) {
+      heroTop += step;
+    }
+
+    if (key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.keyA) {
+      heroLeft -= step;
+    }
+
+    if (key == LogicalKeyboardKey.arrowRight || key == LogicalKeyboardKey.keyD) {
+      heroLeft += step;
+    }
+  });
+}
 
   void _checkMissionCompletion() {
     if (inspectedPc &&
@@ -109,8 +137,16 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
       appBar: AppBar(
         title: const Text('Home Network'),
       ),
-      body: Stack(
-        children: [
+      body: KeyboardListener(
+  focusNode: _focusNode,
+  autofocus: true,
+  onKeyEvent: (event) {
+    if (event is KeyDownEvent) {
+      _moveHero(event.logicalKey);
+    }
+  },
+  child: Stack(
+    children: [
           Positioned.fill(
             child: Column(
               children: [
@@ -215,15 +251,16 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
             top: 500,
             child: _momCard(context),
           ),
-          Positioned(
-            left: 520,
-            top: 500,
+                   Positioned(
+            left: heroLeft,
+            top: heroTop,
             child: _heroCard(),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _momCard(BuildContext context) {
     return InkWell(
