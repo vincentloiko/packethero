@@ -8,6 +8,8 @@ class HomeNetworkScreen extends StatefulWidget {
 }
 
 class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
+  bool missionAccepted = false;
+
   bool cableConnectedToPc = false;
   bool cableConnectedToRouter = false;
 
@@ -15,8 +17,8 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
   bool inspectedRouter = false;
   bool inspectedCable = false;
 
-  bool missionCompleted = false;
   bool internetVerified = false;
+  bool missionCompleted = false;
 
   void _checkMissionCompletion() {
     if (inspectedPc &&
@@ -29,6 +31,78 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
     }
   }
 
+  void _showMomDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Mom'),
+          content: const Text(
+            'The Internet does not work anymore.\n\n'
+            'Can you take a look in the bedroom?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  missionAccepted = true;
+                });
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Accept Mission'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDoorDialog(BuildContext context) {
+    if (!missionAccepted) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('Door'),
+            content: const Text(
+              'You should talk to Mom before going to the bedroom.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                },
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Bedroom'),
+          content: const Text(
+            'The bedroom is now accessible.\n\n'
+            'Inspect the network devices and restore Internet access.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Enter'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,6 +111,47 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
       ),
       body: Stack(
         children: [
+          Positioned.fill(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.brown.shade100,
+                      border: Border.all(color: Colors.brown, width: 2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'BEDROOM',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      border: Border.all(color: Colors.orange, width: 2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'LIVING ROOM',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           Positioned(
             left: 20,
             top: 20,
@@ -52,11 +167,17 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
                     Text(
                       missionCompleted
                           ? 'MISSION COMPLETE'
-                          : 'Current Mission',
+                          : missionAccepted
+                              ? 'Current Mission'
+                              : 'No Mission',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    const Text('Restore Internet access'),
+                    Text(
+                      missionAccepted
+                          ? 'Restore Internet access'
+                          : 'Talk to Mom',
+                    ),
                     if (missionCompleted) ...[
                       const SizedBox(height: 8),
                       const Text('✓ Completed'),
@@ -66,24 +187,37 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
               ),
             ),
           ),
+
           Positioned(
             left: 120,
-            top: 260,
+            top: 100,
             child: _deviceCard(context, '💻', 'PC'),
           ),
           Positioned(
-            left: 500,
-            top: 250,
+            left: 520,
+            top: 130,
             child: _deviceCard(context, '📡', 'Router'),
           ),
           Positioned(
-            left: 250,
-            top: 400,
+            left: 320,
+            top: 230,
             child: _deviceCard(context, '🔗', 'Cable'),
           ),
+
           Positioned(
-            left: 350,
-            top: 220,
+            left: 420,
+            top: 330,
+            child: _doorCard(context),
+          ),
+
+          Positioned(
+            left: 120,
+            top: 500,
+            child: _momCard(context),
+          ),
+          Positioned(
+            left: 520,
+            top: 500,
             child: _heroCard(),
           ),
         ],
@@ -91,83 +225,129 @@ class _HomeNetworkScreenState extends State<HomeNetworkScreen> {
     );
   }
 
+  Widget _momCard(BuildContext context) {
+    return InkWell(
+      onTap: () => _showMomDialog(context),
+      child: Card(
+        color: Colors.pink.shade50,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('👩', style: TextStyle(fontSize: 44)),
+              SizedBox(height: 8),
+              Text('Mom'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _doorCard(BuildContext context) {
+    return InkWell(
+      onTap: () => _showDoorDialog(context),
+      child: Card(
+        color: missionAccepted ? Colors.green.shade50 : Colors.grey.shade200,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                missionAccepted ? '🚪' : '🔒',
+                style: const TextStyle(fontSize: 44),
+              ),
+              const SizedBox(height: 8),
+              Text(missionAccepted ? 'Door' : 'Locked Door'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _deviceCard(BuildContext context, String icon, String title) {
     return InkWell(
-      onTap: () {
-        setState(() {
-          if (title == 'PC') {
-            inspectedPc = true;
+      onTap: missionAccepted
+          ? () {
+              setState(() {
+                if (title == 'PC') {
+                  inspectedPc = true;
 
-            if (cableConnectedToPc && cableConnectedToRouter) {
-              internetVerified = true;
+                  if (cableConnectedToPc && cableConnectedToRouter) {
+                    internetVerified = true;
+                  }
+                }
+
+                if (title == 'Router') {
+                  inspectedRouter = true;
+                }
+
+                if (title == 'Cable') {
+                  inspectedCable = true;
+                }
+
+                _checkMissionCompletion();
+              });
+
+              showDialog(
+                context: context,
+                builder: (dialogContext) {
+                  return StatefulBuilder(
+                    builder: (dialogContext, setDialogState) {
+                      return AlertDialog(
+                        title: Text(_getDeviceTitle(title)),
+                        content: Text(_getDeviceDescription(title)),
+                        actions: [
+                          if (title == 'Cable')
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  cableConnectedToPc = !cableConnectedToPc;
+                                  _checkMissionCompletion();
+                                });
+                                setDialogState(() {});
+                              },
+                              child: Text(
+                                cableConnectedToPc
+                                    ? 'Disconnect from PC'
+                                    : 'Connect to PC',
+                              ),
+                            ),
+                          if (title == 'Cable')
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  cableConnectedToRouter =
+                                      !cableConnectedToRouter;
+                                  _checkMissionCompletion();
+                                });
+                                setDialogState(() {});
+                              },
+                              child: Text(
+                                cableConnectedToRouter
+                                    ? 'Disconnect from Router'
+                                    : 'Connect to Router',
+                              ),
+                            ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text('Close'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
             }
-          }
-
-          if (title == 'Router') {
-            inspectedRouter = true;
-          }
-
-          if (title == 'Cable') {
-            inspectedCable = true;
-          }
-
-          _checkMissionCompletion();
-        });
-
-        showDialog(
-          context: context,
-          builder: (dialogContext) {
-            return StatefulBuilder(
-              builder: (dialogContext, setDialogState) {
-                return AlertDialog(
-                  title: Text(_getDeviceTitle(title)),
-                  content: Text(_getDeviceDescription(title)),
-                  actions: [
-                    if (title == 'Cable')
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            cableConnectedToPc = !cableConnectedToPc;
-                            _checkMissionCompletion();
-                          });
-                          setDialogState(() {});
-                        },
-                        child: Text(
-                          cableConnectedToPc
-                              ? 'Disconnect from PC'
-                              : 'Connect to PC',
-                        ),
-                      ),
-                    if (title == 'Cable')
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            cableConnectedToRouter =
-                                !cableConnectedToRouter;
-                            _checkMissionCompletion();
-                          });
-                          setDialogState(() {});
-                        },
-                        child: Text(
-                          cableConnectedToRouter
-                              ? 'Disconnect from Router'
-                              : 'Connect to Router',
-                        ),
-                      ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                      },
-                      child: const Text('Close'),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
+          : null,
       child: Card(
+        color: missionAccepted ? null : Colors.grey.shade200,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
